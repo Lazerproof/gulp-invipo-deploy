@@ -2,7 +2,7 @@
   "name": "gulp-inv-deploy",
   "description": "Gulp FTP deploy.",
   "homepage": "https://github.com/invipo/gulp-inv-deploy#readme",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Incinity s.r.o. <info@incinity.cz> (http://www.incinity.cz)",
   "license": "MIT",
   "main": "index.js",
