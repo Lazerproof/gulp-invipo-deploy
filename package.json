@@ -2,7 +2,7 @@
   "name": "gulp-invipo-deploy",
   "description": "Gulp FTP deploy.",
   "homepage": "https://github.com/incinity/gulp-invipo-deploy#readme",
-  "version": "1.1.0",
+  "version": "1.0.1",
   "author": "Incinity s.r.o. <info@incinity.cz> (http://www.incinity.cz)",
   "license": "MIT",
   "main": "index.js",
@@ -24,6 +24,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "es6-promise": "^3.2.1",
+>>>>>>> 8bc94cb56f69a83b86efd1b3e635bd40ca456903
     "gulp-util": "^3.0.7",
     "vinyl-fs": "^2.4.3",
     "vinyl-ftp": "^0.5.0"
