@@ -11,7 +11,7 @@ module.exports = function (options) {
     options = options || {};
 
     return new Promise(
-        function (resolve, reject) {
+        function (resolve) {
             try {
                 var conn = new Vftp({
                     host: options.conn.host,
@@ -28,10 +28,10 @@ module.exports = function (options) {
             }
         }
     ).then(function (conn) {
-        return new Promise(function (resolve, reject) {
-            Vfs.src(options.src, {buffer: false, cwd: options.dist})
-                .pipe(conn.newer('/'))
-                .pipe(conn.dest('/'))
+        return new Promise(function (resolve) {
+            Vfs.src(options.globs, {buffer: false, cwd: options.src})
+                .pipe(conn.newer(options.dest))
+                .pipe(conn.dest(options.dest))
                 .on('error', function (err) {
                     console.error(err)
                 })
@@ -40,7 +40,7 @@ module.exports = function (options) {
                 });
         })
     }).then(function (conn) {
-        return new Promise(function (resolve, reject) {
+        return new Promise(function (resolve) {
             if (options.rmdir) {
                 options.rmdir.forEach(function (dir) {
                     conn.rmdir(dir, function (err) {
@@ -51,14 +51,15 @@ module.exports = function (options) {
             resolve(conn);
         });
     }).then(function (conn) {
-        if (options.clean) {
-            try {
-                conn.clean('**/*', options.dist, {base: '/'});
-            } catch (err) {
-                Gutil.log(Gutil.colors.red('Cannot clean/sync FTP folders. (ERR: ' + err + ')'));
+        return new Promise(function (resolve) {
+            if (options.clean) {
+                try {
+                    conn.clean('**/*', options.src, {base: options.dest});
+                } catch (err) {
+                    Gutil.log(Gutil.colors.red('Cannot clean/sync FTP folders. (ERR: ' + err + ')'));
+                }
             }
-        }
+            resolve(conn);
+        });
     });
-
-
 };
