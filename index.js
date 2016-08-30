@@ -27,7 +27,7 @@ module.exports = function (options) {
     }
 
     new Promise(function (resolve) {
-        if (options.rmdir) {
+        if ((options.rmdir) && (options.rmdir.length)) {
             Gutil.log(Gutil.colors.green("Starting remove dirs."));
             var conn = connection();
             for (var key in options.rmdir) {
@@ -39,6 +39,8 @@ module.exports = function (options) {
                     resolve(conn);
                 });
             }
+        } else {
+            resolve(conn);
         }
     }).then(function (conn) {
         return new Promise(function (resolve) {
