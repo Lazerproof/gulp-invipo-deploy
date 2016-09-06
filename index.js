@@ -24,28 +24,29 @@ module.exports = function (options) {
             Gutil.log(Gutil.colors.red("Cannot establish FTP(S) connection. (ERR: " + err + ")"));
             return false;
         }
-    }
+    };
 
     new Promise(function (resolve) {
         if ((options.rmdir) && (options.rmdir.length)) {
             Gutil.log(Gutil.colors.green("Starting remove dirs."));
             var conn = connection();
-            for (var key in options.rmdir) {
-                conn.rmdir(options.rmdir[key], function (err) {
+            options.rmdir.forEach(function (value, index) {
+                conn.rmdir(value, function (err) {
                     if (err) {
-                        Gutil.log(Gutil.colors.red("Cannot clean " + options.rmdir[key] + " directory. (ERR: " + err + ")"));
+                        Gutil.log(Gutil.colors.red("Cannot clean " + value + " directory. (ERR: " + err + ")"));
                     }
                     Gutil.log(Gutil.colors.green("Finished remove dirs."));
-                    resolve(conn);
+                    resolve();
                 });
-            }
+            });
         } else {
-            resolve(conn);
+            resolve();
         }
-    }).then(function (conn) {
+    }).then(function () {
         return new Promise(function (resolve) {
             Gutil.log(Gutil.colors.green("Starting upload."));
             var conn = connection();
+            console.log(Vfs.src(options.globs));
             Vfs.src(options.globs, {buffer: false, cwd: options.src})
                 .pipe(conn.newer(options.dest))
                 .pipe(conn.dest(options.dest))
@@ -54,16 +55,20 @@ module.exports = function (options) {
                 })
                 .on("finish", function () {
                     Gutil.log(Gutil.colors.green("Finished upload."));
-                    resolve(conn);
+                    resolve();
                 });
-        }).then(function (conn) {
+        }).then(function () {
             if (options.clean) {
                 Gutil.log(Gutil.colors.green("Starting clean."));
-                conn = connection();
+                var conn = connection();
                 conn.clean("/**/*", options.src, {cwd: options.src, base: options.dest})
                     .on("finish", function () {
                         Gutil.log(Gutil.colors.green("Finished clean."));
+                    })
+                    .on("error", function (err) {
+                        Gutil.log(Gutil.colors.red(err));
                     });
+
             }
         })
     })
