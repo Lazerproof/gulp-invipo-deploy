@@ -80,7 +80,7 @@ module.exports = (options = {}) => {
 
                 Gutil.log(Gutil.colors.green("Starting clean."));
 
-                conn.clean("/**/*", options.src, {cwd: options.src, base: options.dest})
+                conn.clean(`${options.dest}**/*`, options.src, {cwd: options.src, base: options.dest})
                     .on("finish", function () {
                         Gutil.log(Gutil.colors.green("Finished clean."));
                     })
