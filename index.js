@@ -1,52 +1,67 @@
-"use strict";
+'use strict';
 
-var Vfs = require("vinyl-fs");
-var Vftp = require("vinyl-ftp");
-var Gutil = require("gulp-util");
-var Promise = require("es6-promise").Promise;
+let Vfs = require('vinyl-fs');
+let Vftp = require('vinyl-ftp');
+let Gutil = require('gulp-util');
 
-module.exports = function (options) {
 
-    options = options || {};
+module.exports = (options = {}) => {
 
-    var connection = function () {
+    let connection = () => {
         try {
             return new Vftp({
                 host: options.conn.host,
                 user: options.conn.user,
                 pass: options.conn.password,
                 port: options.conn.secure ? options.conn.port.ftps : options.conn.port.ftp,
-                secure: (options.conn.secure ? true : false),
+                secure: options.conn.secure,
                 secureOptions: {"rejectUnauthorized": false},
                 log: Gutil.log
             });
         } catch (err) {
             Gutil.log(Gutil.colors.red("Cannot establish FTP(S) connection. (ERR: " + err + ")"));
-            return false;
         }
     };
 
-    new Promise(function (resolve) {
+    new Promise((resolve) => {
         if ((options.rmdir) && (options.rmdir.length)) {
-            Gutil.log(Gutil.colors.green("Starting remove dirs."));
-            var conn = connection();
-            options.rmdir.forEach(function (value, index) {
-                conn.rmdir(value, function (err) {
-                    if (err) {
-                        Gutil.log(Gutil.colors.red("Cannot clean " + value + " directory. (ERR: " + err + ")"));
-                    }
-                    Gutil.log(Gutil.colors.green("Finished remove dirs."));
-                    resolve();
-                });
-            });
+
+            /** @type {object} */
+            let conn = connection();
+
+            if (conn) {
+                /** @type {Array} */
+                let promises = [];
+
+                Gutil.log(Gutil.colors.green("Starting remove dirs."));
+
+                for (let dir of options.rmdir) {
+                    promises.push(
+                        conn.rmdir(dir, function (err) {
+                            if (err) {
+                                Gutil.log(Gutil.colors.red("Cannot clean " + dir + " directory. (ERR: " + err + ")"));
+                            }
+                            resolve();
+                        })
+                    )
+                }
+
+                Promise.all(promises)
+                    .then(() => {
+                        Gutil.log(Gutil.colors.green("Remove dirs finished."));
+                    });
+            }
         } else {
             resolve();
         }
     }).then(function () {
         return new Promise(function (resolve) {
+
+            /** @type {object} */
+            let conn = connection();
+
             Gutil.log(Gutil.colors.green("Starting upload."));
-            var conn = connection();
-            console.log(Vfs.src(options.globs));
+
             Vfs.src(options.globs, {buffer: false, cwd: options.src})
                 .pipe(conn.newer(options.dest))
                 .pipe(conn.dest(options.dest))
@@ -59,8 +74,12 @@ module.exports = function (options) {
                 });
         }).then(function () {
             if (options.clean) {
+
+                /** @type {object} */
+                let conn = connection();
+
                 Gutil.log(Gutil.colors.green("Starting clean."));
-                var conn = connection();
+
                 conn.clean("/**/*", options.src, {cwd: options.src, base: options.dest})
                     .on("finish", function () {
                         Gutil.log(Gutil.colors.green("Finished clean."));
@@ -68,7 +87,6 @@ module.exports = function (options) {
                     .on("error", function (err) {
                         Gutil.log(Gutil.colors.red(err));
                     });
-
             }
         })
     })
